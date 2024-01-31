@@ -1,4 +1,4 @@
-const { Product, ProductInfo } = require('../models/models')
+const { Product, ProductInfo, Brand, Type } = require('../models/models')
 const ApiError = require('../error/ApiError')
 const uuid = require('uuid')
 const path = require('path')
@@ -9,20 +9,20 @@ class ProductController {
 
         try {
 
-            let { clothingType,gender, price, name, brandId, typeId, info } = req.body
+            let { clothingType, gender, price, name, brandName, typeName, info } = req.body
             const { img } = req.files
             let fileName = uuid.v4() + '.jpg'
             img.mv(path.resolve(__dirname, '..', 'static', fileName))
-            const product = await Product.create({ clothingType,gender, name, price, brandId, typeId, img: fileName })
+            const product = await Product.create({ clothingType, gender, name, price, brandName, typeName, img: fileName })
 
             if (info) {
-                info = JSON.parse(info)
+                info = JSON.parse(info) 
                 info.forEach(i => {
                     ProductInfo.create({
-                        title: i.title,
+                        title: i.title, 
                         description: i.description,
                         productId: product.id,
-                    })
+                    }) 
                 });
             }
 
@@ -34,40 +34,32 @@ class ProductController {
         }
     }
     async getAll(req, res) {
-        let { brandId, typeId, limit, page } = req.query
+        let { brandName, typeName, limit, page } = req.query
 
         page = page || 1
-        limit = limit || 8
+        limit = limit || 15
         let offset = page * limit - limit
-
+ 
         let products
-        if (!brandId && !typeId) {
+        if (!brandName && !typeName) {
 
             products = await Product.findAndCountAll({ limit, offset })
-
         }
-        if (brandId && !typeId) {
-            products = await Product.findAndCountAll({ where: { brandId }, limit, offset })
+        if (brandName && !typeName) {
+            products = await Product.findAndCountAll({ where: { brandName }, limit, offset })
         }
-        if (!brandId && typeId) {
-            products = await Product.findAndCountAll({ where: { typeId }, limit, offset })
+        if (!brandName && typeName) {
+            products = await Product.findAndCountAll({ where: { typeName }, limit, offset })
         }
-        if (brandId && typeId) {
-            products = await Product.findAndCountAll({ where: { brandId, brandId }, limit, offset })
+        if (brandName && typeName) {
+            products = await Product.findAndCountAll({ where: { brandName, typeName }, limit, offset })
         }
         return res.json(products)
 
     }
 
 
-    async getOne(req, res) {
-        const { id } = req.params
-        const product = await Product.findOne({
-            where: { id },
-            include: [{ model: ProductInfo, as: 'info' }]
-        })
-        return res.json(product)
-    }
+
 
     async delete(req, res, next) {
         try {
@@ -84,7 +76,7 @@ class ProductController {
             await product.destroy();
 
             // Удаляем файл изображения продукта
-            
+
             const imagePath = path.resolve(__dirname, '..', 'static', product.img);
             if (fs.existsSync(imagePath)) {
                 fs.unlinkSync(imagePath);
@@ -95,7 +87,34 @@ class ProductController {
             next(ApiError.internal(error.message));
         }
     }
+    async getFilterCards(req, res, next) {
+        // try {
+        const { filter } = req.params;
+
+        // Используем метод findAll с фильтром
+        const filteredProducts = await Product.findAll({
+            where: {
+                typeName: filter,
+
+            },
+            // include: [Type, Brand], // Включаем связанные модели, если необходимо
+        });
+
+        return res.json(filteredProducts);
+        // } catch (error) { 
+        //     next(ApiError.internal(error.message));
+        // }
+    }
+
+    async getOne(req, res) {
+        const { id } = req.params
+        const product = await Product.findOne({
+            where: { id },
+            // include: [{ model: ProductInfo, as: 'info' }]
+        })
+        return res.json(product)
+    }
 
 }
 
-module.exports = new ProductController()
+module.exports = new ProductController() 

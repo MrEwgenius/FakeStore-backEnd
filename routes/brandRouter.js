@@ -6,4 +6,4 @@ router.post('/', brandController.create)
 router.get('/', brandController.getAll)
 //ну жно добавить метод УДАЛИТЬ
 
-module.exports = router
+module.exports = router  

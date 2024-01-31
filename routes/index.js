@@ -11,4 +11,4 @@ router.use('/type', typeRouter)
 router.use('/brand', brandRouter)
 router.use('/product', productRouter)
 
-module.exports = router 
+module.exports = router  
