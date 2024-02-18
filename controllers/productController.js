@@ -49,7 +49,7 @@ class ProductController {
             products = await Product.findAndCountAll({ where: { brandName }, limit, offset })
         }
         if (!brandName && typeName) {
-            products = await Product.findAndCountAll({ where: { typeName }, limit, offset })
+            products = await Product.findAndCountAll({ where: { typeName }, limit, offset })            
         }
         if (brandName && typeName) {
             products = await Product.findAndCountAll({ where: { brandName, typeName }, limit, offset })
@@ -74,7 +74,7 @@ class ProductController {
 
             // Удаляем информацию о продукте из базы данных
             await product.destroy();
-
+ 
             // Удаляем файл изображения продукта
 
             const imagePath = path.resolve(__dirname, '..', 'static', product.img);
@@ -115,6 +115,6 @@ class ProductController {
         return res.json(product)
     }
 
-}
+}  
 
 module.exports = new ProductController() 
