@@ -21,14 +21,21 @@ const Product = sequelize.define('product', {
     name: { type: DataTypes.STRING, unique: true, allowNull: false },
     price: { type: DataTypes.INTEGER, allowNull: false },
     rating: { type: DataTypes.INTEGER, defaultValue: 0 },
-    img: { type: DataTypes.STRING, allowNull: false },
+    // img: { type: DataTypes.STRING, allowNull: false },
     gender: { type: DataTypes.STRING, allowNull: false },
-    clothingType: { type: DataTypes.STRING, allowNull: false }
-}, {
-    defaultScope: {
-        attributes: { exclude: ['typeId', 'brandId'] },
-    },
+    clothingType: { type: DataTypes.STRING, allowNull: false },
+    size: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: false },
+    image: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true }
 });
+// const ProductImage = sequelize.define('product_image', {
+//     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+//     productId: { type: DataTypes.INTEGER, allowNull: false },
+//     imageUrl: { type: DataTypes.STRING, allowNull: false },
+// }); 
+
+// Product.hasMany(ProductImage);
+// ProductImage.belongsTo(Product); 
+
 
 const Type = sequelize.define('type', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -101,5 +108,6 @@ module.exports = {
     Brand,
     Rating,
     TypeBrand,
-    ProductInfo
+    ProductInfo,
+    //  ProductImage
 }
