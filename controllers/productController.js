@@ -83,6 +83,9 @@ class ProductController {
 
             return res.json(responseData);
         } catch (error) {
+            for (const fileName of imageFileNames) {
+                fs.unlinkSync(path.resolve(__dirname, '..', 'static', fileName));
+            }
             next(ApiError.badRequest(error.message));
         }
     }
@@ -134,20 +137,29 @@ class ProductController {
             const product = await Product.findOne({ where: { id } });
 
             if (!product) {
-                return next(ApiError.notFound(`Product with id ${id} not found`));
+                return next(ApiError.notFound(`Продукт с Id ${id} не найден`));
             }
 
-            // Удаляем информацию о продукте из базы данных
-            await product.destroy();
+            // // Удаляем информацию о продукте из базы данных
 
             // Удаляем файл изображения продукта
 
-            const imagePath = path.resolve(__dirname, '..', 'static', product.img);
-            if (fs.existsSync(imagePath)) {
-                fs.unlinkSync(imagePath);
-            }
+            // const imagePath = path.resolve(__dirname, '..', 'static', product.image);
+            const imagePath = product.image.map(imageName =>
+                path.resolve(__dirname, '..', 'static', imageName)
+            );
+            // if (fs.existsSync(imagePath)) {
+            //     fs.unlinkSync(imagePath);
+            // }
+            imagePath.forEach(imagePath => {
+                if (fs.existsSync(imagePath)) {
+                    fs.unlinkSync(imagePath);
+                }
+            });
 
+            await product.destroy();
             return res.json({ message: 'Product deleted successfully' });
+            // return res.json({ imagePath });
         } catch (error) {
             next(ApiError.internal(error.message));
         }
