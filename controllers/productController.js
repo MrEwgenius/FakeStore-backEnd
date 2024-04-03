@@ -36,25 +36,28 @@ class ProductController {
     //     }
     // }
     async create(req, res, next) {
+        let imageFileNames
         try {
             let { clothingType, gender, price, name, brandName, typeName, size, info } = req.body;
             let image = Array.isArray(req.files['image']) ? req.files['image'] : [req.files['image']]; // Проверяем, является ли изображение массивом
             let sizes = Array.isArray(req.body['size']) ? req.body['size'] : [req.body['size']]
 
-
-            // // Массив для хранения имен файлов изображений 
-            let imageFileNames = [];
-            if (!image) {
-                return next(ApiError.badRequest("No image files were uploaded")); // Возвращаем ошибку, если файлы изображений не были загружены
+            if (!clothingType || !gender || !price || !name || !brandName || !typeName || !size || !image) {
+                return next(ApiError.badRequest("Не все обязательные поля были заполнены"));
             }
+            // // Массив для хранения имен файлов изображений 
+            imageFileNames = [];
+            // if (!image) {
+            //     return next(ApiError.badRequest("No image files were uploaded")); // Возвращаем ошибку, если файлы изображений не были загружены
+            // }
             // // Сохраняем каждое изображение на сервере и получаем его имя 
+
+            // Создаем продукт в базе данных  
             for (const img of image) {
                 const fileName = uuid.v4() + '.jpg';
                 img.mv(path.resolve(__dirname, '..', 'static', fileName));
                 imageFileNames.push(fileName);
             }
-
-            // Создаем продукт в базе данных  
             const product = await Product.create({
                 clothingType,
                 gender,
@@ -81,7 +84,7 @@ class ProductController {
                 image: imageFileNames,
             };
 
-            return res.json(responseData);
+            return res.json({ message: 'Продукт успешно создан' });
         } catch (error) {
             for (const fileName of imageFileNames) {
                 fs.unlinkSync(path.resolve(__dirname, '..', 'static', fileName));
@@ -92,7 +95,7 @@ class ProductController {
 
 
     async getAll(req, res) {
-        let { brandName, typeName, limit, page, size } = req.query
+        let { price, brandName, typeName, limit, page, size } = req.query
 
         page = page || 1
         limit = limit || 15
@@ -115,6 +118,22 @@ class ProductController {
         if (brandName) {
             whereClause.brandName = brandName;
         }
+        // if (price) {
+        //     const min = price[0]
+        //     const max = price[1]
+        //     whereClause.price = { [Op.lte]: price }
+        // }
+        if (price) { 
+            const min = price[0]
+            const max = price[1]
+            whereClause.price = {
+
+                [Op.gte]: parseInt(min), // больше или равно 100
+                [Op.lte]: parseInt(max) // меньше или равно 200
+            }
+        }
+
+
         if (typeName) {
             whereClause.typeName = typeName;
         }
@@ -164,25 +183,25 @@ class ProductController {
             next(ApiError.internal(error.message));
         }
     }
-    async getFilterCards(req, res, next) {
-        // try {
-        const { filter } = req.params;
+    // async getFilterCards(req, res, next) {
+    //     // try {
+    //     const { filter } = req.params;
 
-        // Используем метод findAll с фильтром
-        const filteredProducts = await Product.findAll({
-            where: {
-                typeName: filter,
+    //     // Используем метод findAll с фильтром
+    //     const filteredProducts = await Product.findAll({
+    //         where: {
+    //             typeName: filter,
 
-            },
+    //         },
 
-            // include: [Type, Brand], // Включаем связанные модели, если необходимо
-        });
+    //         // include: [Type, Brand], // Включаем связанные модели, если необходимо
+    //     });
 
-        return res.json(filteredProducts);
-        // } catch (error) { 
-        //     next(ApiError.internal(error.message));
-        // }
-    }
+    //     return res.json(filteredProducts);
+    //     // } catch (error) { 
+    //     //     next(ApiError.internal(error.message));
+    //     // }
+    // }
 
     async getOne(req, res) {
         const { id } = req.params
