@@ -13,8 +13,8 @@ const generateJwt = (id, email, role, userName, userLastName) => {
         { expiresIn: '24h' }
     )
 
-}  
- 
+}
+
 
 
 class UserController {

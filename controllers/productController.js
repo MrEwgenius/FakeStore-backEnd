@@ -95,7 +95,7 @@ class ProductController {
 
 
     async getAll(req, res) {
-        let { price, brandName, typeName, limit, page, size } = req.query
+        let { search, price, brandName, typeName, limit, page, size, order } = req.query
 
         page = page || 1
         limit = limit || 15
@@ -103,27 +103,12 @@ class ProductController {
 
         let products
         let whereClause = {};
-        // if (!brandName && !typeName) {
-        //     products = await Product.findAndCountAll({ limit, offset })
-        // }
-        // if (brandName && !typeName) {
-        //     products = await Product.findAndCountAll({ where: { brandName }, limit, offset })
-        // }
-        // if (!brandName && typeName) {
-        //     products = await Product.findAndCountAll({ where: { typeName }, limit, offset })
-        // }
-        // if (brandName && typeName) {
-        //     products = await Product.findAndCountAll({ where: { brandName, typeName }, limit, offset })
-        // }
+
         if (brandName) {
             whereClause.brandName = brandName;
         }
-        // if (price) {
-        //     const min = price[0]
-        //     const max = price[1]
-        //     whereClause.price = { [Op.lte]: price }
-        // }
-        if (price) { 
+
+        if (price) {
             const min = price[0]
             const max = price[1]
             whereClause.price = {
@@ -140,8 +125,46 @@ class ProductController {
         if (size) {
             whereClause.size = { [Op.contains]: [size] }
         }
-        products = await Product.findAndCountAll({ where: whereClause, limit, offset });
-        return res.json(products)
+        let orderClause = [];
+
+        if (order === 'ASC') {
+            orderClause = [['price', 'ASC']];
+        } else if (order === 'DESC') {
+            orderClause = [['price', 'DESC']];
+        } else if (order === 'createdAt') {
+            orderClause = [['createdAt', 'DESC']];
+        }
+        try {
+            if (search) {
+                products = await Product.findAndCountAll({
+                    where: { name: { [Op.iLike]: `%${search}%` } }, 
+                    limit,
+                    offset,
+                    order: orderClause
+                }); 
+            } else {
+                products = await Product.findAndCountAll({
+                    where: whereClause,
+                    limit,
+                    offset,
+                    order: orderClause
+                });
+            }     
+
+            return res.json(products);
+        } catch (error) {
+            console.error(error);
+            next(ApiError.badRequest(error.message));
+        }
+
+        // products = await Product.findAndCountAll({
+        //     where: whereClause,
+        //     limit,
+        //     offset,
+        //     order: orderClause
+        // });
+        // return res.json(products)
+        // return res.json(orderClause)
 
     }
 
