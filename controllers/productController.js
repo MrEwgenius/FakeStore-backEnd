@@ -93,6 +93,28 @@ class ProductController {
         }
     }
 
+    async getSearchProduct(req, res) {
+        let { search, limit, page, } = req.query
+
+        page = page || 1
+        limit = limit || 15
+        let offset = page * limit - limit
+        let products
+
+        if (search) {
+            products = await Product.findAndCountAll({
+                where: { name: { [Op.iLike]: `%${search}%` } },
+                limit,
+                offset,
+            });
+            return res.json(products);
+        } else {
+            return res.json({ message: `По поиску ${search} ничего не найдено` });
+
+        }
+
+
+    }
 
     async getAll(req, res) {
         let { search, price, brandName, typeName, limit, page, size, order } = req.query
@@ -135,21 +157,21 @@ class ProductController {
             orderClause = [['createdAt', 'DESC']];
         }
         try {
-            if (search) {
-                products = await Product.findAndCountAll({
-                    where: { name: { [Op.iLike]: `%${search}%` } }, 
-                    limit,
-                    offset,
-                    order: orderClause
-                }); 
-            } else {
-                products = await Product.findAndCountAll({
-                    where: whereClause,
-                    limit,
-                    offset,
-                    order: orderClause
-                });
-            }     
+            // if (search) {
+            //     products = await Product.findAndCountAll({
+            //         where: { name: { [Op.iLike]: `%${search}%` } },
+            //         limit,
+            //         offset,
+            //         order: orderClause
+            //     });
+            // } else {
+            products = await Product.findAndCountAll({
+                where: whereClause,
+                limit,
+                offset,
+                order: orderClause
+            });
+            // }
 
             return res.json(products);
         } catch (error) {
