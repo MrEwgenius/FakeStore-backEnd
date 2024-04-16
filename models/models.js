@@ -8,7 +8,9 @@ const User = sequelize.define('user', {
     userLastName: { type: DataTypes.STRING, allowNull: false },
     password: { type: DataTypes.STRING },
     role: { type: DataTypes.STRING, defaultValue: "USER" },
-})
+    adress: { type: DataTypes.STRING, allowNull: false },
+
+}) 
 
 const Basket = sequelize.define('basket', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -27,7 +29,7 @@ const Product = sequelize.define('product', {
     gender: { type: DataTypes.STRING, allowNull: false },
     clothingType: { type: DataTypes.STRING, allowNull: false },
     size: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: false },
-    image: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true }
+    image: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true }  
 });
 // const ProductImage = sequelize.define('product_image', {
 //     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
