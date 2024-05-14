@@ -48,7 +48,7 @@ class BasketController {
 
     async basketProduct(req, res, next) {
         try {
-            let { productId } = req.body; // Получите идентификатор товара и количество из тела запроса
+            let { productId, sizeBasketProduct } = req.body; // Получите идентификатор товара и количество из тела запроса
             // const { id } = req.params;
             let userId = req.user.id; // Получите идентификатор пользователя из аутентификационного токена
 
@@ -60,7 +60,11 @@ class BasketController {
             }
 
             // Добавьте товар в корзину пользователя
-            let basketProduct = await BasketProduct.create({ basketId: basket.id, productId });
+            let basketProduct = await BasketProduct.create({
+                basketId: basket.id,
+                productId,
+                sizeBasketProduct
+            });
 
             const basketItems = await BasketProduct.findAll({ where: { basketId: basket.id } });
             // Создаем массив идентификаторов продуктов из корзины
@@ -97,11 +101,29 @@ class BasketController {
             const productIds = basketItems.map(item => item.productId);
 
             // Находим все товары с помощью идентификаторов
-            const products = await Product.findAll({
-                where: { id: productIds }
+            const product = await Product.findAll({
+                where: { id: productIds },
                 // include: [{ model: ProductInfo, as: 'info' }]
-            });
-            res.status(200).json(products);
+            },);
+            const productDetails = product.map(product => ({
+                id: product.id,
+                clothingType: product.clothingType,
+                gender: product.gender,
+                price: product.price,
+                name: product.name,
+                brandName: product.brandName,
+                typeName: product.typeName,
+                size: product.size,
+                image: product.image,
+                sizeBasketProduct: basketItems.find(b => b.productId === product.id).sizeBasketProduct, // Проверка соответствия basketItem
+            }));
+            res.status(200).json(
+                {
+                    products: productDetails
+                },
+
+
+            );
 
             // Возвращаем список товаров в ответе
         } catch (error) {
@@ -129,7 +151,7 @@ class BasketController {
             res.status(200).json({ message: 'Элемент корзины успешно удален' });
         } catch (error) {
             next(error);
-        }   
+        }
     }
 
 }

@@ -8,9 +8,10 @@ const User = sequelize.define('user', {
     userLastName: { type: DataTypes.STRING, allowNull: false },
     password: { type: DataTypes.STRING },
     role: { type: DataTypes.STRING, defaultValue: "USER" },
-    adress: { type: DataTypes.STRING, allowNull: false },
+    adress: { type: DataTypes.STRING, allowNull: true },
+    userNumber: { type: DataTypes.STRING, allowNull: true },
 
-}) 
+})
 
 const Basket = sequelize.define('basket', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -18,6 +19,8 @@ const Basket = sequelize.define('basket', {
 
 const BasketProduct = sequelize.define('basket_product', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    sizeBasketProduct: { type: DataTypes.STRING, allowNull: false },
+
 })
 
 const Product = sequelize.define('product', {
@@ -25,20 +28,36 @@ const Product = sequelize.define('product', {
     name: { type: DataTypes.STRING, unique: true, allowNull: false },
     price: { type: DataTypes.INTEGER, allowNull: false },
     rating: { type: DataTypes.INTEGER, defaultValue: 0 },
-    // img: { type: DataTypes.STRING, allowNull: false },
     gender: { type: DataTypes.STRING, allowNull: false },
     clothingType: { type: DataTypes.STRING, allowNull: false },
     size: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: false },
-    image: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true }  
+    image: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true }
 });
-// const ProductImage = sequelize.define('product_image', {
-//     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-//     productId: { type: DataTypes.INTEGER, allowNull: false },
-//     imageUrl: { type: DataTypes.STRING, allowNull: false },
-// }); 
 
-// Product.hasMany(ProductImage);
-// ProductImage.belongsTo(Product); 
+const Order = sequelize.define('order', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    orderDate: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    status: { type: DataTypes.STRING, defaultValue: "Processing" },
+});
+
+Order.belongsTo(User); // Заказ принадлежит определенному пользователю
+User.hasMany(Order); // Пользователь может иметь много заказов
+ 
+const OrderProduct = sequelize.define('order_product', {
+    quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 }, // Количество продуктов в заказе
+    price: { type: DataTypes.FLOAT, allowNull: false }, // Цена продукта в момент заказа
+});
+
+// Ассоциации между заказом и продуктом через промежуточную таблицу
+Order.belongsToMany(Product, {
+    through: OrderProduct,
+    foreignKey: 'orderId', // Связывает с Order
+});
+ 
+Product.belongsToMany(Order, {
+    through: OrderProduct,
+    foreignKey: 'productId', // Связывает с Product
+});
 
 
 const Type = sequelize.define('type', {
@@ -84,8 +103,6 @@ Product.belongsTo(Type, { foreignKey: 'typeName', targetKey: 'name' });
 Brand.hasMany(Product)
 // Product.belongsTo(Brand)
 Product.belongsTo(Brand, { foreignKey: 'brandName', targetKey: 'name' });
-// Product.belongsTo(Brand, { foreignKey: 'brandId', as: 'brand', targetKey: 'id', attributes: ['name'] });
-// Product.belongsTo(Brand, {as: 'brand', attributes: ['name']});
 
 
 Product.hasMany(Rating)
@@ -113,5 +130,8 @@ module.exports = {
     Rating,
     TypeBrand,
     ProductInfo,
+    Order,
+    OrderProduct
+    
     //  ProductImage
 }

@@ -127,7 +127,7 @@ class ProductController {
         let whereClause = {};
 
         if (brandName) {
-            whereClause.brandName = brandName;
+            whereClause.brandName = brandName; 
         }
 
         if (price) {
@@ -144,8 +144,8 @@ class ProductController {
         if (typeName) {
             whereClause.typeName = typeName;
         }
-        if (size) {
-            whereClause.size = { [Op.contains]: [size] }
+        if (size && Array.isArray(size)) {
+            whereClause.size = { [Op.overlap]: size }; 
         }
         let orderClause = [];
 
