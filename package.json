@@ -12,9 +12,7 @@
         "url": "git+https://github.com/MrEwgenius/backend.git"
     },
     "keywords": [],
-    "engines": {
-        "node": "18.x"
-    },
+    
     "author": "",
     "license": "ISC",
     "bugs": {
