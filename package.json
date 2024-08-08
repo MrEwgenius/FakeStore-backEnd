@@ -4,7 +4,8 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "dev": "nodemon index.js"
+        "dev": "nodemon index.js",
+        "build": "npm install pg && vercel build"
     },
     "repository": {
         "type": "git",
