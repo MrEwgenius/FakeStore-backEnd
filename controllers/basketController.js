@@ -13,37 +13,7 @@ class BasketController {
         }
         return res.json([basket]); // Возвращаем корзину пользователя
 
-        // try {
-        //     // Получаем заголовок Authorization из запроса
-        //     const authorizationHeader = req.headers['authorization'];
-        //     if (!authorizationHeader) {
-        //         // Если заголовок отсутствует, возвращаем ошибку
-        //         throw new ApiError(401, 'Необходима авторизация');
-        //     }
-
-        //     // Разбиваем заголовок на части по пробелу
-        //     const parts = authorizationHeader.split(' ');
-        //     if (parts.length !== 2 || parts[0] !== 'Bearer') {
-        //         // Если заголовок неверного формата, возвращаем ошибку
-        //         throw new ApiError(401, 'Неверный формат токена');
-        //     }
-
-        //     const token = parts[1]; // Получаем сам токен из частей заголовка
-        //     const decodedToken = jwt.verify(token, process.env.SECRET_KEY); // Декодируем токен
-
-        //     // Извлекаем id пользователя из декодированного токена
-        //     const userId = decodedToken.id;
-
-        //     // Теперь вы можете использовать userId для поиска корзины пользователя и возврата ее в ответе
-
-        //     const basket = await Basket.findOne({ where: { userId } });
-        //     if (!basket) {
-        //         return res.json([]); // Если корзина не найдена, возвращаем пустой массив
-        //     }
-        //     return res.json([basket]); // Возвращаем корзину пользователя
-        // } catch (err) {
-        //     next(err);
-        // }
+      
     }
 
     async basketProduct(req, res, next) {
@@ -133,13 +103,11 @@ class BasketController {
     async removeBasketItems(req, res, next) {
         try {
             const { id } = req.params;
-            const userId = req.user.id; // Идентификатор пользователя из аутентификационного токена
-            // Находим корзину пользователя
+            const userId = req.user.id; 
             const basket = await Basket.findOne({ where: { userId } });
             if (!basket) {
                 return res.status(404).json({ message: 'Корзина не найдена' });
             }
-            // // Находим корзину пользователя
             const basketItem = await BasketProduct.findOne({ where: { productId: id } });
             if (!basketItem) {
                 return res.status(404).json({ message: 'Элемент корзины не найден' });
@@ -147,7 +115,6 @@ class BasketController {
 
             await basketItem.destroy();
 
-            // Возвращаем список товаров в ответе
             res.status(200).json({ message: 'Элемент корзины успешно удален' });
         } catch (error) {
             next(error);

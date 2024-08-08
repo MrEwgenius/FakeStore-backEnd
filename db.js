@@ -13,4 +13,4 @@ module.exports = new Sequelize(
         sync: true
 
     }
-)
+) 

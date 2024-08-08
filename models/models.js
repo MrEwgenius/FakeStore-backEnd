@@ -25,7 +25,7 @@ const BasketProduct = sequelize.define('basket_product', {
 
 const Product = sequelize.define('product', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    name: { type: DataTypes.STRING, unique: true, allowNull: false },
+    name: { type: DataTypes.STRING,  allowNull: false },
     price: { type: DataTypes.INTEGER, allowNull: false },
     rating: { type: DataTypes.INTEGER, defaultValue: 0 },
     gender: { type: DataTypes.STRING, allowNull: false },
@@ -42,18 +42,19 @@ const Order = sequelize.define('order', {
 
 Order.belongsTo(User); // Заказ принадлежит определенному пользователю
 User.hasMany(Order); // Пользователь может иметь много заказов
- 
+
 const OrderProduct = sequelize.define('order_product', {
     quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 }, // Количество продуктов в заказе
+    size: { type: DataTypes.STRING, allowNull: true },
     price: { type: DataTypes.FLOAT, allowNull: false }, // Цена продукта в момент заказа
-});
+}); 
 
 // Ассоциации между заказом и продуктом через промежуточную таблицу
 Order.belongsToMany(Product, {
     through: OrderProduct,
     foreignKey: 'orderId', // Связывает с Order
 });
- 
+
 Product.belongsToMany(Order, {
     through: OrderProduct,
     foreignKey: 'productId', // Связывает с Product
@@ -132,6 +133,6 @@ module.exports = {
     ProductInfo,
     Order,
     OrderProduct
-    
+
     //  ProductImage
 }

@@ -32,10 +32,10 @@ class UserController {
         const hashPassword = await bcrypt.hash(password, 5)
         const user = await User.create({ email, role, password: hashPassword, userName, userLastName })
         const basket = await Basket.create({ userId: user.id })
-        const token = generateJwt(user.id, user.email, user.role,  user.userName, user.userLastName,)
+        const token = generateJwt(user.id, user.email, user.role, user.userName, user.userLastName,)
 
         const message = {
-            to: email, 
+            to: email,
             subject: "Hello ✔",
             text: "Hello world?",
             html: "<b>Пробник сообщения на майл отправлен</b>",
@@ -172,6 +172,31 @@ class UserController {
         } catch (error) {
             return next(ApiError.internal('Ошибка при обновлении имени/номер'));
         }
+    }
+
+    async userSubscribeInner(req, res, next) {
+        const { email } = req.body;
+
+        try {
+
+            const message = {
+                to: email,
+                subject: "Вы Подписаны на рассылку",
+                html: 'Спасибо что подписались на рассылку)',
+            };
+
+            success(message);
+            return res.json({
+                userEmail: email,
+                message: "Вы успешно подписались"
+            })
+
+        } catch (error) {
+            return next(ApiError.internal(error));
+        }
+
+
+
     }
 
 

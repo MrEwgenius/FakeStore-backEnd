@@ -7,34 +7,7 @@ const { Sequelize } = require('../db');
 const { Op } = require('sequelize');
 
 class ProductController {
-    // async create(req, res, next) {
 
-    //     try {
-
-    //         let { clothingType, gender, price, name, brandName, typeName, info } = req.body
-    //         const { img } = req.files
-    //         let fileName = uuid.v4() + '.jpg'
-    //         img.mv(path.resolve(__dirname, '..', 'static', fileName))
-    //         const product = await Product.create({ clothingType, gender, name, price, brandName, typeName, img: fileName })
-
-    //         if (info) {
-    //             info = JSON.parse(info) 
-    //             info.forEach(i => {
-    //                 ProductInfo.create({
-    //                     title: i.title, 
-    //                     description: i.description,
-    //                     productId: product.id,
-    //                 }) 
-    //             });
-    //         }
-
-
-
-    //         return res.json(product)
-    //     } catch (error) {
-    //         next(ApiError.badRequest(error.message))
-    //     }
-    // }
     async create(req, res, next) {
         let imageFileNames
         try {
@@ -45,14 +18,14 @@ class ProductController {
             if (!clothingType || !gender || !price || !name || !brandName || !typeName || !size || !image) {
                 return next(ApiError.badRequest("Не все обязательные поля были заполнены"));
             }
-            // // Массив для хранения имен файлов изображений 
+            // // // Массив для хранения имен файлов изображений 
             imageFileNames = [];
-            // if (!image) {
-            //     return next(ApiError.badRequest("No image files were uploaded")); // Возвращаем ошибку, если файлы изображений не были загружены
-            // }
-            // // Сохраняем каждое изображение на сервере и получаем его имя 
+            if (!image) {
+                return next(ApiError.badRequest("No image files were uploaded")); // Возвращаем ошибку, если файлы изображений не были загружены
+            }
+            // // // Сохраняем каждое изображение на сервере и получаем его имя 
 
-            // Создаем продукт в базе данных  
+            // // Создаем продукт в базе данных  
             for (const img of image) {
                 const fileName = uuid.v4() + '.jpg';
                 img.mv(path.resolve(__dirname, '..', 'static', fileName));
@@ -69,27 +42,34 @@ class ProductController {
                 image: imageFileNames,
             });
 
-            // 
-            // Собираем данные для ответа
-            const responseData = {
-                id: product.id,
-                clothingType: product.clothingType,
-                gender: product.gender,
-                price: product.price,
-                name: product.name,
-                brandName: product.brandName,
-                typeName: product.typeName,
-                size: sizes, // Включаем размеры продукта в ответ
-                // Добавьте другие свойства продукта, если они есть
-                image: imageFileNames,
-            };
+            // // 
+            // // Собираем данные для ответа
+            // const responseData = {
+            //     id: product.id,
+            //     clothingType: product.clothingType,
+            //     gender: product.gender, 
+            //     price: product.price,
+            //     name: product.name,
+            //     brandName: product.brandName,
+            //     typeName: product.typeName,
+            //     size: sizes, // Включаем размеры продукта в ответ
+            //     // Добавьте другие свойства продукта, если они есть
+            //     image: imageFileNames,
+            // };
 
             return res.json({ message: 'Продукт успешно создан' });
+            // return res.json(!!image);
         } catch (error) {
-            for (const fileName of imageFileNames) {
-                fs.unlinkSync(path.resolve(__dirname, '..', 'static', fileName));
+            if (req.files) {
+                for (const fileName of imageFileNames) {
+                    fs.unlinkSync(path.resolve(__dirname, '..', 'static', fileName));
+                }
+                next(ApiError.badRequest(error.message));
+            } else {
+                next(ApiError.badRequest(error.message));
+
+
             }
-            next(ApiError.badRequest(error.message));
         }
     }
 
@@ -127,7 +107,7 @@ class ProductController {
         let whereClause = {};
 
         if (brandName) {
-            whereClause.brandName = brandName; 
+            whereClause.brandName = brandName;
         }
 
         if (price) {
@@ -145,7 +125,7 @@ class ProductController {
             whereClause.typeName = typeName;
         }
         if (size && Array.isArray(size)) {
-            whereClause.size = { [Op.overlap]: size }; 
+            whereClause.size = { [Op.overlap]: size };
         }
         let orderClause = [];
 
@@ -204,17 +184,13 @@ class ProductController {
                 return next(ApiError.notFound(`Продукт с Id ${id} не найден`));
             }
 
-            // // Удаляем информацию о продукте из базы данных
 
             // Удаляем файл изображения продукта
 
-            // const imagePath = path.resolve(__dirname, '..', 'static', product.image);
             const imagePath = product.image.map(imageName =>
                 path.resolve(__dirname, '..', 'static', imageName)
             );
-            // if (fs.existsSync(imagePath)) {
-            //     fs.unlinkSync(imagePath);
-            // }
+
             imagePath.forEach(imagePath => {
                 if (fs.existsSync(imagePath)) {
                     fs.unlinkSync(imagePath);
@@ -223,30 +199,11 @@ class ProductController {
 
             await product.destroy();
             return res.json({ message: 'Product deleted successfully' });
-            // return res.json({ imagePath });
         } catch (error) {
             next(ApiError.internal(error.message));
         }
     }
-    // async getFilterCards(req, res, next) {
-    //     // try {
-    //     const { filter } = req.params;
-
-    //     // Используем метод findAll с фильтром
-    //     const filteredProducts = await Product.findAll({
-    //         where: {
-    //             typeName: filter,
-
-    //         },
-
-    //         // include: [Type, Brand], // Включаем связанные модели, если необходимо
-    //     });
-
-    //     return res.json(filteredProducts);
-    //     // } catch (error) { 
-    //     //     next(ApiError.internal(error.message));
-    //     // }
-    // }
+   
 
     async getOne(req, res) {
         const { id } = req.params

@@ -1,67 +1,88 @@
 const { where } = require('sequelize');
 const ApiError = require('../error/ApiError');
-const { Order, Product, OrderProduct } = require('../models/models');
+const { Order, Product,  } = require('../models/models');
+const success = require('../nodemailer')
+const path = require('path');
+const { createOrderConfirmationEmailHtml, createProductListItemHtml } = require('../render/emailTemplates'); 
+
+
 
 class OrderController {
-    async create(req, res, next) {
+    async createOrder(req, res, next) {
 
         try {
-            // const productId = parseInt(req.body.productId, 10);
-            const { productId } = req.body
+            const { productId, sizeProduct } = req.body
             const userId = req.user.id
-            // if (isNaN(productId)) {
-            //     return next(ApiError.badRequest('Invalid productId'));
-            // }
+            const userEmail = req.user.email
 
             const products = await Product.findAll({
                 where: {
                     id: productId,
                 },
             });
-            const order = await Order.create({
-                userId
-            });
+            const order = await Order.create({ userId });
 
-
-            await Promise.all(products.map(async (el) => {
+            await Promise.all(products.map(async (el, index) => {
                 await order.addProduct(el, {
                     through: {
-                        price: el.price
+                        price: el.price, 
+                        size: sizeProduct[index]
                     }
                 })
 
             }))
 
-            const productsInOrder = await order.getProducts();
+
+            const orderedProducts = await order.getProducts();
+
+            const totalPrice = orderedProducts.reduce((sum, product) => sum + (product.order_product.price * product.order_product.quantity), 0);
+
+            const emailAttachments = orderedProducts.map(product => ({
+                filename: path.basename(product.image[0]),
+                path: path.resolve(__dirname, '..', 'static', product.image[0]),
+                cid: `${product.id}`
+            }));
+            const productListHtml = orderedProducts.map(product => createProductListItemHtml(product.id, product.name, product.order_product.size, product.order_product.price)).join('');
+
+            const message = {
+                to: userEmail,
+                subject: "Ваш заказ подтвержден",
+                html: createOrderConfirmationEmailHtml(order.id, productListHtml, totalPrice),
+                attachments: emailAttachments
+            };
+
+            success(message);
 
 
-            return res.json(productsInOrder)
+            return res.json(orderedProducts)
 
 
         } catch (error) {
             next(ApiError.badRequest(error));
+            // return res.json(error)
+
 
         }
 
 
     }
-    async getAll(req, res, next) {
+    async getAllOrders(req, res, next) {
         const userId = req.user.id;
-    
+
         try {
             const orders = await Order.findAll({
                 where: { userId }
             });
-    
+
             const ordersWithProducts = await Promise.all(orders.map(async (order) => {
                 const products = await order.getProducts();
-                return { ...order.toJSON(), products }; // Добавляем список продуктов к каждому заказу
+                return { ...order.toJSON(), products }; 
             }));
-            
+
             return res.json(ordersWithProducts);
         } catch (error) {
             next(ApiError.badRequest(error));
-        } 
+        }
     }
 
 

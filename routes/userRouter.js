@@ -9,5 +9,6 @@ router.post('/login', userController.login)
 router.get('/auth', authMiddleware, userController.check)
 router.post('/useraddress', authMiddleware, userController.addUserAddress)
 router.post('/usernamelastname', authMiddleware, userController.addUserNameLastName)
+router.post('/usersubscribe', authMiddleware, userController.userSubscribeInner)
 
-module.exports = router
+module.exports = router 
