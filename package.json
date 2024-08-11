@@ -3,8 +3,11 @@
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
+    "engines": {
+        "node": "index.js"
+    },
     "scripts": {
-        "dev": "nodemon index.js"
+        "dev": "node index.js"
     },
     "repository": {
         "type": "git",
