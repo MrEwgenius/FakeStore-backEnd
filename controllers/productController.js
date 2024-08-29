@@ -1,34 +1,67 @@
-const { ProductInfo, Brand, ProductImage, Type, Product } = require('../models/models')
-const ApiError = require('../error/ApiError')
-const uuid = require('uuid')
-const path = require('path')
-const fs = require('fs');
-const { Sequelize } = require('../db');
-const { Op } = require('sequelize');
+const {
+    ProductInfo,
+    Brand,
+    ProductImage,
+    Type,
+    Product,
+} = require("../models/models");
+const ApiError = require("../error/ApiError");
+const uuid = require("uuid");
+const path = require("path");
+const fs = require("fs");
+const { Sequelize } = require("../db");
+const { Op } = require("sequelize");
 
 class ProductController {
-
     async create(req, res, next) {
-        let imageFileNames
+        let imageFileNames;
         try {
-            let { clothingType, gender, price, name, brandName, typeName, size, info } = req.body;
-            let image = Array.isArray(req.files['image']) ? req.files['image'] : [req.files['image']]; // Проверяем, является ли изображение массивом
-            let sizes = Array.isArray(req.body['size']) ? req.body['size'] : [req.body['size']]
+            let {
+                clothingType,
+                gender,
+                price,
+                name,
+                brandName,
+                typeName,
+                size,
+                info,
+            } = req.body;
+            let image = Array.isArray(req.files["image"])
+                ? req.files["image"]
+                : [req.files["image"]]; // Проверяем, является ли изображение массивом
+            let sizes = Array.isArray(req.body["size"])
+                ? req.body["size"]
+                : [req.body["size"]];
 
-            if (!clothingType || !gender || !price || !name || !brandName || !typeName || !size || !image) {
-                return next(ApiError.badRequest("Не все обязательные поля были заполнены"));
+            if (
+                !clothingType ||
+                !gender ||
+                !price ||
+                !name ||
+                !brandName ||
+                !typeName ||
+                !size ||
+                !image
+            ) {
+                return next(
+                    ApiError.badRequest(
+                        "Не все обязательные поля были заполнены"
+                    )
+                );
             }
-            // // // Массив для хранения имен файлов изображений 
+            // // // Массив для хранения имен файлов изображений
             imageFileNames = [];
             if (!image) {
-                return next(ApiError.badRequest("No image files were uploaded")); // Возвращаем ошибку, если файлы изображений не были загружены
+                return next(
+                    ApiError.badRequest("No image files were uploaded")
+                ); // Возвращаем ошибку, если файлы изображений не были загружены
             }
-            // // // Сохраняем каждое изображение на сервере и получаем его имя 
+            // // // Сохраняем каждое изображение на сервере и получаем его имя
 
-            // // Создаем продукт в базе данных  
+            // // Создаем продукт в базе данных
             for (const img of image) {
-                const fileName = uuid.v4() + '.jpg';
-                img.mv(path.resolve(__dirname, '..', 'static', fileName));
+                const fileName = uuid.v4() + ".jpg";
+                img.mv(path.resolve(__dirname, "..", "static", fileName));
                 imageFileNames.push(fileName);
             }
             const product = await Product.create({
@@ -42,12 +75,12 @@ class ProductController {
                 image: imageFileNames,
             });
 
-            // // 
+            // //
             // // Собираем данные для ответа
             // const responseData = {
             //     id: product.id,
             //     clothingType: product.clothingType,
-            //     gender: product.gender, 
+            //     gender: product.gender,
             //     price: product.price,
             //     name: product.name,
             //     brandName: product.brandName,
@@ -57,29 +90,29 @@ class ProductController {
             //     image: imageFileNames,
             // };
 
-            return res.json({ message: 'Продукт успешно создан' });
+            return res.json({ message: "Продукт успешно создан" });
             // return res.json(!!image);
         } catch (error) {
             if (req.files) {
                 for (const fileName of imageFileNames) {
-                    fs.unlinkSync(path.resolve(__dirname, '..', 'static', fileName));
+                    fs.unlinkSync(
+                        path.resolve(__dirname, "..", "static", fileName)
+                    );
                 }
                 next(ApiError.badRequest(error.message));
             } else {
                 next(ApiError.badRequest(error.message));
-
-
             }
         }
     }
 
     async getSearchProduct(req, res) {
-        let { search, limit, page, } = req.query
+        let { search, limit, page } = req.query;
 
-        page = page || 1
-        limit = limit || 15
-        let offset = page * limit - limit
-        let products
+        page = page || 1;
+        limit = limit || 15;
+        let offset = page * limit - limit;
+        let products;
 
         if (search) {
             products = await Product.findAndCountAll({
@@ -89,21 +122,21 @@ class ProductController {
             });
             return res.json(products);
         } else {
-            return res.json({ message: `По поиску ${search} ничего не найдено` });
-
+            return res.json({
+                message: `По поиску ${search} ничего не найдено`,
+            });
         }
-
-
     }
 
-    async getAll(req, res) {
-        let { search, price, brandName, typeName, limit, page, size, order } = req.query
+    async getAll(req, res, next) {
+        let { search, price, brandName, typeName, limit, page, size, order } =
+            req.query;
 
-        page = page || 1
-        limit = limit || 15
-        let offset = page * limit - limit
+        page = page || 1;
+        limit = limit || 15;
+        let offset = page * limit - limit;
 
-        let products
+        let products;
         let whereClause = {};
 
         if (brandName) {
@@ -111,15 +144,13 @@ class ProductController {
         }
 
         if (price) {
-            const min = price[0]
-            const max = price[1]
+            const min = price[0];
+            const max = price[1];
             whereClause.price = {
-
                 [Op.gte]: parseInt(min), // больше или равно 100
-                [Op.lte]: parseInt(max) // меньше или равно 200
-            }
+                [Op.lte]: parseInt(max), // меньше или равно 200
+            };
         }
-
 
         if (typeName) {
             whereClause.typeName = typeName;
@@ -129,12 +160,12 @@ class ProductController {
         }
         let orderClause = [];
 
-        if (order === 'ASC') {
-            orderClause = [['price', 'ASC']];
-        } else if (order === 'DESC') {
-            orderClause = [['price', 'DESC']];
-        } else if (order === 'createdAt') {
-            orderClause = [['createdAt', 'DESC']];
+        if (order === "ASC") {
+            orderClause = [["price", "ASC"]];
+        } else if (order === "DESC") {
+            orderClause = [["price", "DESC"]];
+        } else if (order === "createdAt") {
+            orderClause = [["createdAt", "DESC"]];
         }
         try {
             // if (search) {
@@ -149,7 +180,7 @@ class ProductController {
                 where: whereClause,
                 limit,
                 offset,
-                order: orderClause
+                order: orderClause,
             });
             // }
 
@@ -167,11 +198,7 @@ class ProductController {
         // });
         // return res.json(products)
         // return res.json(orderClause)
-
     }
-
-
-
 
     async delete(req, res, next) {
         try {
@@ -184,37 +211,34 @@ class ProductController {
                 return next(ApiError.notFound(`Продукт с Id ${id} не найден`));
             }
 
-
             // Удаляем файл изображения продукта
 
-            const imagePath = product.image.map(imageName =>
-                path.resolve(__dirname, '..', 'static', imageName)
+            const imagePath = product.image.map((imageName) =>
+                path.resolve(__dirname, "..", "static", imageName)
             );
 
-            imagePath.forEach(imagePath => {
+            imagePath.forEach((imagePath) => {
                 if (fs.existsSync(imagePath)) {
                     fs.unlinkSync(imagePath);
                 }
             });
 
             await product.destroy();
-            return res.json({ message: 'Product deleted successfully' });
+            return res.json({ message: "Product deleted successfully" });
         } catch (error) {
             next(ApiError.internal(error.message));
         }
     }
-   
 
     async getOne(req, res) {
-        const { id } = req.params
+        const { id } = req.params;
         const product = await Product.findOne({
             where: { id },
             // include: ProductImage
             // include: [{ model: ProductInfo, as: 'info' }]
-        })
-        return res.json(product)
+        });
+        return res.json(product);
     }
-
 }
 
-module.exports = new ProductController() 
+module.exports = new ProductController();

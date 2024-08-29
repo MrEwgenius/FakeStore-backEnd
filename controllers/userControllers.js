@@ -41,7 +41,7 @@ class UserController {
             html: "<b>Пробник сообщения на майл отправлен</b>",
 
         }
-        success(message)
+        // success(message)
         return res.json({
             token,
             message
