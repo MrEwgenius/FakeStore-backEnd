@@ -17,14 +17,12 @@ class ProductController {
         let imageFileNames;
         try {
             let {
-                clothingType,
                 gender,
                 price,
                 name,
                 brandName,
                 typeName,
                 size,
-                info,
             } = req.body;
             let image = Array.isArray(req.files["image"])
                 ? req.files["image"]
@@ -34,7 +32,6 @@ class ProductController {
                 : [req.body["size"]];
 
             if (
-                !clothingType ||
                 !gender ||
                 !price ||
                 !name ||
@@ -65,7 +62,6 @@ class ProductController {
                 imageFileNames.push(fileName);
             }
             const product = await Product.create({
-                clothingType,
                 gender,
                 name,
                 price,
@@ -75,23 +71,8 @@ class ProductController {
                 image: imageFileNames,
             });
 
-            // //
-            // // Собираем данные для ответа
-            // const responseData = {
-            //     id: product.id,
-            //     clothingType: product.clothingType,
-            //     gender: product.gender,
-            //     price: product.price,
-            //     name: product.name,
-            //     brandName: product.brandName,
-            //     typeName: product.typeName,
-            //     size: sizes, // Включаем размеры продукта в ответ
-            //     // Добавьте другие свойства продукта, если они есть
-            //     image: imageFileNames,
-            // };
-
+          
             return res.json({ message: "Продукт успешно создан" });
-            // return res.json(!!image);
         } catch (error) {
             if (req.files) {
                 for (const fileName of imageFileNames) {
