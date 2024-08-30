@@ -10,4 +10,4 @@ router.get("/search/:search", productController.getSearchProduct);
 router.get("/:id", productController.getOne);
 router.delete("/:id", productController.delete);
 
-module.exports = router;
+module.exports = router; 
