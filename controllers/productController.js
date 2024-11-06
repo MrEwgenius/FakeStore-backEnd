@@ -71,7 +71,7 @@ class ProductController {
                 image: imageFileNames,
             });
 
-          
+           
             return res.json({ message: "Продукт успешно создан" });
         } catch (error) {
             if (req.files) {
